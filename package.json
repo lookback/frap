@@ -1,0 +1,38 @@
+{
+  "name": "frap",
+  "version": "0.0.0",
+  "description": "A tiny Functional Reactive architecture for JS apps.",
+  "main": "build/index.js",
+  "scripts": {
+    "lint": "tslint --format stylish --project .",
+    "pretest": "npm run lint",
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "bundle": "browserify build/example/react.js -o dist/bundle.js -d"
+  },
+  "author": "Martin Algesten <martin@lookback.io>",
+  "contributors": [
+    "Johan Brook <johan@lookback.io>"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lookback/frap.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lookback/frap/issues"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "@types/react": "^16.8.14",
+    "@types/react-dom": "^16.8.4",
+    "browserify": "^16.2.3",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "tslint": "^5.16.0",
+    "tslint-immutable": "^5.5.2",
+    "typescript": "^3.4.5"
+  },
+  "dependencies": {
+    "xstream": "^11.10.0"
+  }
+}
