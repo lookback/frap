@@ -28,7 +28,7 @@ function main(
         .of('meteor!');
 
     sources.view.addListener({ next: (v) => console.log({ view: v })});
-    sources.drivers.meteor.addListener({ next: (v) => console.log({ meteor: v })});
+    sources.meteor.addListener({ next: (v) => console.log({ meteor: v })});
 
     // output instructions to drivers
     return {

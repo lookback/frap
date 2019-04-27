@@ -47,8 +47,11 @@ function main(
         .of('driver!');
 
     // Add listeners to consume the view and driver streams
+
+    // Built-in "view" stream:
     sources.view.addListener({ next: (v) => console.log({ view: v })});
-    sources.drivers.someDriver.addListener({ next: (v) => console.log({ meteor: v })});
+    // Drivers:
+    sources.someDriver.addListener({ next: (v) => console.log({ meteor: v })});
 
     return {
         /** Resulting state stream. */

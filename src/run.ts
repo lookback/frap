@@ -1,15 +1,20 @@
 import xs, { Stream } from 'xstream';
 import delay from 'xstream/extra/delay';
-import { Main, Drivers, SinkProxies, DriverSources } from './types';
+import { Main, Drivers, SinkProxies, MainSources } from './types';
 
+// The main type exports from this lib.
 export { Drivers, MainSources, MainSinks } from './types';
 
+/**
+ * Factory for creating the function which starts your app.
+ * Takes your `main` function an an optional set of drivers. */
 export const setup = <V, S, D extends Drivers>(
     main: Main<V, S, D>,
-    drivers: D
-) => (view: Stream<V>): Stream<S> => run(main, drivers, view);
+    drivers?: D
+) => (view: Stream<V>): Stream<S> => run(main, view, drivers || {});
 
-const makeSinkProxies = <D extends Drivers>(drivers: D): SinkProxies<D> => {
+/** Creates "sink proxies" which are dummy streams as outputs to a set of drivers. */
+const createSinkProxies = <D extends Drivers>(drivers?: D): SinkProxies<D> => {
     const sinkProxies: SinkProxies<D> = {} as SinkProxies<D>;
 
     for (const name in drivers) {
@@ -22,12 +27,20 @@ const makeSinkProxies = <D extends Drivers>(drivers: D): SinkProxies<D> => {
     return sinkProxies;
 };
 
-/** Call all drivers with the (proxied) sinks. */
-const callDrivers = <D extends Drivers>(
+const createMainSinks = <V, D extends Drivers>(
+    view: Stream<V>,
+    sinkProxies: SinkProxies<D>,
     drivers: D,
-    sinkProxies: SinkProxies<D>
-): DriverSources<D> => {
-    const sources: DriverSources<D> = {} as DriverSources<D>;
+): MainSources<V, D> => {
+
+    // We create the sources to eventually feed to the main function.
+    // We attach the "view" stream directly. We call each driver, which is
+    // a function, with a "sink proxy". A proxy is a faked stream which is
+    // imitating the real driver output, coming from the main function.
+    // Thus, we achieve a cycle.
+    const sources: MainSources<V, D> = {
+        view,
+    } as MainSources<V, D>;
 
     for (const name in drivers) {
         if (drivers.hasOwnProperty(name)) {
@@ -40,17 +53,21 @@ const callDrivers = <D extends Drivers>(
     return sources;
 };
 
+/**
+ * Starts the whole application. Takes a `main` function (your app),
+ * a set of optional drivers, and a stream of messages from the view.
+ * 
+ * We return the stream of the core app state for the app to draw in
+ * the view.
+ */
 const run = <V, S, D extends Drivers, M extends Main<V, S, D>>(
     main: M,
+    view: Stream<V>,
     drivers: D,
-    view: Stream<V>
 ): Stream<S> => {
-    const proxies = makeSinkProxies(drivers);
+    const proxies = createSinkProxies(drivers);
 
-    const mainSinks = main({
-        view,
-        drivers: callDrivers(drivers, proxies),
-    });
+    const mainSinks = main(createMainSinks<V, D>(view, proxies, drivers));
 
     // cycle back the output from main to the input.
     // however we do this with a delay to break up
