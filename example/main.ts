@@ -24,18 +24,16 @@ function main(
             foo: `Hello ${n}!`,
         }));
 
-    const meteorOut$ = xs
-        .of('meteor!');
+    const meteorOut$ = xs.of('meteor!');
 
     sources.view.addListener({ next: (v) => console.log({ view: v })});
     sources.meteor.addListener({ next: (v) => console.log({ meteor: v })});
 
-    // output instructions to drivers
     return {
+        // the app state stream
         state: state$,
-        drivers: {
-            meteor: meteorOut$,
-        },
+        // output instructions to drivers
+        meteor: meteorOut$,
     };
 }
 

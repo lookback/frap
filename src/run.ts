@@ -67,20 +67,22 @@ const run = <V, S, D extends Drivers, M extends Main<V, S, D>>(
 ): Stream<S> => {
     const proxies = createSinkProxies(drivers);
 
-    const mainSinks = main(createMainSinks<V, D>(view, proxies, drivers));
+    const { state, ...driverSinks } = main(createMainSinks<V, D>(view, proxies, drivers));
 
     // cycle back the output from main to the input.
     // however we do this with a delay to break up
     // synchronous chains (because we have derived models).
     for (const name in proxies) {
         if (proxies.hasOwnProperty(name)) {
-            const streamProxy = proxies[name];
+            const streamProxy = proxies[name as string];
+            const driverOut = driverSinks && driverSinks[name as string];
+
             // tslint:disable-next-line:no-expression-statement
-            if (mainSinks.drivers && mainSinks.drivers[name]) {
-                streamProxy.imitate(mainSinks.drivers[name].compose(delay(1)));
+            if (driverOut) {
+                streamProxy.imitate(driverOut.compose(delay(1)));
             }
         }
     }
 
-    return mainSinks.state;
+    return state;
 };

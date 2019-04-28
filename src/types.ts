@@ -10,14 +10,18 @@ export type MainSources<V, D extends Drivers> = BuiltInSources<V> & {
     [k in keyof D]: ReturnType<D[k]>;
 };
 
-/** The outputs of the `main` function. */
-export type MainSinks<S, D extends Drivers> = {
+export type BuiltInSinks<S> = {
     /** A stream of app state. */
     state: Stream<S>;
-    /** Output streams to drivers. */
-    drivers?: { [k in keyof D]: Parameters<D[k]>[0] };
 };
 
+/** Output streams to drivers. */
+export type DriverOut<D extends Drivers> = {
+    [k in keyof D]: Parameters<D[k]>[0];
+};
+
+/** The outputs of the `main` function. */
+export type MainSinks<S, D extends Drivers> = BuiltInSinks<S> & DriverOut<D>;
 
 export type Driver<Si, So> = Si extends void ? (() => So) : ((s: Si) => So);
 

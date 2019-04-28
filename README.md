@@ -57,9 +57,7 @@ function main(
         /** Resulting state stream. */
         state: state$,
         /** Output to the drivers. */
-        drivers: {
-            someDriver: driverOut$,
-        },
+        someDriver: driverOut$,
     };
 }
 
