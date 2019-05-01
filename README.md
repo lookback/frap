@@ -54,9 +54,9 @@ TBD.
 
 ```bash
 npm install
-npm run build # Build Typescript into "build"
-npm run bundle # Build example bundle into "dist"
-open dist/index.html # Test
+npx tsc -w # Watch and compile TS
+npm run bundle-test # Build example bundle
+open test/index.html # Open test page
 ```
 
 ## To Do
