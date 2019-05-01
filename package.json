@@ -9,7 +9,7 @@
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
     "bundle": "tsc && browserify build/src/index.js -s setup | terser -c -m > dist/frap.min.js",
-    "test-bundle": "tsc && browserify build/examples/basic-react-typescript/react.js -d > test/bundle.js"
+    "test-bundle": "tsc && browserify build/examples/basic-react-typescript/view.js -d > test/bundle.js"
   },
   "author": "Martin Algesten <martin@lookback.io>",
   "contributors": [
