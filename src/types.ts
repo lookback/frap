@@ -1,18 +1,20 @@
 import { Stream } from 'xstream';
 
-export type BuiltInSources<V> = {
+export type BuiltInSources<S, V> = {
     /** A stream of messages from the view. */
     view: Stream<V>;
+    /** A stream of state. */
+    state: Stream<S>;
 };
 
 /** The sources fed to the `main` app function. */
-export type MainSources<V, D extends Drivers> = BuiltInSources<V> & {
+export type MainSources<S, V, D extends Drivers> = BuiltInSources<S, V> & {
     [k in keyof D]: ReturnType<D[k]>;
 };
 
 export type BuiltInSinks<S> = {
-    /** A stream of app state. */
-    state: Stream<S>;
+    /** A stream of incremental state updates. */
+    updates$: Stream<Partial<S>>;
 };
 
 /** Output streams to drivers. */
@@ -26,7 +28,7 @@ export type MainSinks<S, D extends Drivers> = BuiltInSinks<S> & DriverOut<D>;
 export type Driver<Si, So> = Si extends void ? (() => So) : ((s: Si) => So);
 
 export type Main<V, S, D extends Drivers> = (
-    sources: MainSources<V, D>
+    sources: MainSources<S, V, D>
 ) => MainSinks<S, D>;
 
 export type Drivers = {

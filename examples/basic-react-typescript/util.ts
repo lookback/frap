@@ -26,5 +26,3 @@ export const useStream = <T>(stream$: Stream<T>, initialState: T) => {
 
     return current;
 };
-
-export default useStream;

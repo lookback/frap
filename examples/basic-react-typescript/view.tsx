@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { render } from 'react-dom';
 import { run, MyState, startState } from './main';
 import xs, { Stream } from 'xstream';
-import useStream from './util';
+import { useStream } from './util';
 
 export interface DidClickButton {
     kind: 'did_click_button';
@@ -60,15 +60,11 @@ const App = () => {
         <StateContext.Provider value={context}>
             <p>
                 <button
-                    disabled={context.state.hasClickedButton}
                     onClick={() => context.send({
                         kind: 'did_click_button',
                         didClick: true,
                     } as DidClickButton)}>
-                        {context.state.hasClickedButton
-                            ? 'Great! Check the state'
-                            : 'Click this button'
-                        }
+                        'Click this button'
                     </button>
             </p>
 

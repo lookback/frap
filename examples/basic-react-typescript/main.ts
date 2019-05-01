@@ -1,6 +1,7 @@
 import xs, { Stream } from 'xstream';
-import { Drivers, MainSources, MainSinks, setup } from '../../src/run';
-import delay from 'xstream/extra/delay';
+import sampleCombine from 'xstream/extra/sampleCombine';
+import { Drivers, MainSources, MainSinks, setup } from '../../src';
+import { dedupe } from '../../src/dedupe';
 
 import { ViewIn, DidClickButton, FetchUserAgent } from './view';
 import { isKind } from './util';
@@ -8,13 +9,14 @@ import { BrowserDriver } from './BrowserDriver';
 
 /** Types for all the app state in our system. */
 export interface MyState {
-    hasClickedButton: boolean;
+    toggledButton: 'on' | 'off';
     greeting?: string;
     userAgent?: string;
+    usingMac?: boolean;
 }
 
 export const startState: MyState = {
-    hasClickedButton: false,
+    toggledButton: 'off',
 };
 
 /** Definitions for all the drivers used. */
@@ -22,30 +24,35 @@ interface MyDrivers extends Drivers {
     browser: typeof BrowserDriver;
 }
 
+const isUsingMac = (userAgent: string): boolean =>
+    userAgent.search(/mac/i) !== -1;
+
 /** Creates the model of our app. Takes a start state and returns
  * a stream of the resulting state from incremental updates.
  */
-const makeModel = (sources: MainSources<ViewIn, MyDrivers>, startState: MyState) => {
-    // incremental updates to the main app state. cycled back via imitate so
-    // we also can use the state to derive updates.
-    const stateUpdate$ = xs.create<Partial<MyState>>();
-    // folded app state from the incremental updates
-    const state$ = stateUpdate$
-        .fold((prev, update) => ({ ...prev, ...update }), startState)
-        .debug('state');
-
+const makeModel = (sources: MainSources<MyState, ViewIn, MyDrivers>) => {
     // Capture this kind of message from the view and map directly to
     // an update of our app state.
     const didClick$ = sources.view
         .filter(isKind<DidClickButton>('did_click_button'))
-        .map<Partial<MyState>>(msg => ({
-            hasClickedButton: msg.didClick,
+        .compose(sampleCombine(sources.state))
+        .map<Partial<MyState>>(([msg, state]) => ({
+            toggledButton: state.toggledButton === 'on' ? 'off' : 'on',
         }));
 
     // Receive input from the browser driver and map to a state update.
     const browserDriverUpdates$ = sources.browser.map<Partial<MyState>>(userAgent => ({
         userAgent,
     }));
+
+    // Use the incoming state stream to derive a new state (`isUsingMac`):
+    const derived$: Stream<Partial<MyState>> = sources.state
+        .map(s => s.userAgent)
+        .filter(dedupe())
+        .filter((s): s is string => !!s)
+        .map(userAgent => ({
+            usingMac: isUsingMac(userAgent),
+        }));
 
     const fromDriver$ = xs.merge(browserDriverUpdates$);
     const fromView$ = xs.merge(didClick$);
@@ -55,25 +62,17 @@ const makeModel = (sources: MainSources<ViewIn, MyDrivers>, startState: MyState)
         .periodic(1000)
         .map<Partial<MyState>>(n => ({
             greeting: `Hello ${n}!`,
-        }));
+        }))
+        .endWhen(xs.periodic(3000).take(1));
 
-    // Finally, merge incremental state updates
-    const realStateUpdate$: Stream<Partial<MyState>> = xs
-        .merge(greetingStateUpdate$, fromView$, fromDriver$)
-        .debug('update')
-        .compose(delay(1));
-
-    // tslint:disable-next-line
-    stateUpdate$.imitate(realStateUpdate$);
-
-    return state$;
+    return xs.merge(greetingStateUpdate$, fromView$, fromDriver$, derived$);
 };
 
 const main = (
-    sources: MainSources<ViewIn, MyDrivers>
+    sources: MainSources<MyState, ViewIn, MyDrivers>
 ): MainSinks<MyState, MyDrivers> => {
     // Create a model from input sources and a start state
-    const state$ = makeModel(sources, startState);
+    const stateUpdates$ = makeModel(sources);
 
     // Filter on these messages from our view and provide them directly as
     // output to our browser driver.
@@ -82,13 +81,13 @@ const main = (
 
     return {
         // the app state stream
-        state: state$,
+        updates$: stateUpdates$,
         // output instructions to drivers
         browser: browserOut$,
     };
 };
 
 // This function kicks everything off!
-export const run = setup(main, {
+export const run = setup(main, startState, {
     browser: BrowserDriver,
 });
