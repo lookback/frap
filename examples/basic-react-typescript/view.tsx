@@ -48,7 +48,9 @@ const App = () => {
     }, []);
 
     useEffect(() => {
-        setState(run(viewIn$));
+        // After mounting, kick the whole app off 🎉
+        const state$ = run(viewIn$, { debug: true });
+        setState(state$);
     }, []);
     
     // 'ourState' now includes our whole app state as a plain object

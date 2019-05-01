@@ -1,15 +1,24 @@
 import xs, { Stream } from 'xstream';
 import delay from 'xstream/extra/delay';
-import { Main, Drivers, SinkProxies, MainSources, BuiltInSources } from './types';
+import { Main, Drivers, SinkProxies, MainSources } from './types';
 
 /**
- * Factory for creating the function which starts your app.
- * Takes your `main` function an an optional set of drivers. */
+ * Factory for creating the `run` function which starts your app.
+ */
 export const setup = <V, S, D extends Drivers>(
+    /**
+     * Your app's `main` function, which accepts `MainSources`, consisting
+     * of a view message stream, a stream of app state, and input from drivers.
+     * 
+     * @see `MainSources`
+     */
     main: Main<V, S, D>,
-    startState: S,
-    drivers?: D
-) => (view: Stream<V>): Stream<S> => run(main, view, drivers || {}, startState);
+    /** Your app's start state. */
+    startState: S = {} as S,
+    /** Drivers that your app will use. */
+    drivers: D = {} as D,
+) => (view: Stream<V>, { debug }: { debug: boolean } = { debug: false}): Stream<S> =>
+    run({main, view, drivers, startState, debug});
 
 /** Creates "sink proxies" which are dummy streams as outputs to a set of drivers. */
 const createSinkProxies = <D extends Drivers>(drivers?: D): SinkProxies<D> => {
@@ -25,24 +34,17 @@ const createSinkProxies = <D extends Drivers>(drivers?: D): SinkProxies<D> => {
     return sinkProxies;
 };
 
-const createMainSinks = <S, V, D extends Drivers>(
-    view: Stream<V>,
-    state: Stream<S>,
+const callDrivers = <D extends Drivers>(
     sinkProxies: SinkProxies<D>,
     drivers: D,
-): MainSources<S, V, D> => {
+) => {
 
     // We create the sources to eventually feed to the main function.
     // We attach the "view" stream directly. We call each driver, which is
     // a function, with a "sink proxy". A proxy is a faked stream which is
     // imitating the real driver output, coming from the main function.
     // Thus, we achieve a cycle.
-    const builtInSources: BuiltInSources<S, V> = {
-        view,
-        state,
-    };
-
-    const sources: MainSources<S, V, D> = {} as MainSources<S, V, D>;
+    const sources: {[k in keyof D]: ReturnType<D[k]>} = {} as any;
 
     for (const name in drivers) {
         if (drivers.hasOwnProperty(name)) {
@@ -52,7 +54,7 @@ const createMainSinks = <S, V, D extends Drivers>(
         }
     }
 
-    return { ...sources, ...builtInSources };
+    return sources;
 };
 
 /**
@@ -63,11 +65,18 @@ const createMainSinks = <S, V, D extends Drivers>(
  * the view.
  */
 export const run = <V, S, D extends Drivers, M extends Main<V, S, D>>(
-    main: M,
-    view: Stream<V>,
-    drivers: D,
-    startState: S,
+    sources: {
+        main: M;
+        view: Stream<V>;
+        drivers: D;
+        startState: S;
+        debug?: boolean;
+    }
 ): Stream<S> => {
+    const { main, drivers, view, startState, debug } = sources;
+
+    const log = (label: string) => (t: any) => !!debug && console.log(label + ':', t);
+
     const proxies = createSinkProxies(drivers);
     
     // Incremental updates to the main app state. Cycled back via imitate so
@@ -76,15 +85,19 @@ export const run = <V, S, D extends Drivers, M extends Main<V, S, D>>(
     // Folded app state from the incremental updates
     const state$ = stateUpdate$
         .fold((prev, update) => ({ ...prev, ...update }), startState)
-        .debug('state');
+        .debug(log('state'));
 
-    const { updates$, ...driverSinks } = main(
-        createMainSinks<S, V, D>(view, state$, proxies, drivers)
-    );
+    const mainSinks: MainSources<S, V, D> = {
+        view,
+        state: state$,
+        ...callDrivers<D>(proxies, drivers),
+    };
+
+    const { updates$, ...driverSinks } = main(mainSinks);
 
     // Finally, merge incremental state updates
     const realStateUpdate$: Stream<Partial<S>> = updates$
-        .debug('update')
+        .debug(log('update'))
         .compose(delay(1));
 
     // tslint:disable-next-line
