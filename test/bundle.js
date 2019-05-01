@@ -205,7 +205,7 @@ exports.BrowserDriver = (out$) => {
     return userAgent$;
 };
 
-},{"./util":6}],3:[function(require,module,exports){
+},{"./util":4}],3:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -275,84 +275,7 @@ exports.run = src_1.setup(main, exports.startState, {
     browser: BrowserDriver_1.BrowserDriver,
 });
 
-},{"../../src":8,"../../src/dedupe":7,"./BrowserDriver":2,"./util":6,"xstream":30,"xstream/extra/sampleCombine":29}],4:[function(require,module,exports){
-"use strict";
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const react_1 = __importStar(require("react"));
-const react_dom_1 = require("react-dom");
-const main_1 = require("./main");
-const xstream_1 = __importDefault(require("xstream"));
-const use_stream_1 = __importDefault(require("./use-stream"));
-/** Helper to create a new Context for the <StateContext.Provider> */
-exports.makeContext = (state, send) => ({
-    state,
-    send: send || (() => { }),
-});
-exports.StateContext = react_1.default.createContext(exports.makeContext(main_1.startState));
-const App = () => {
-    const [state$, setState] = react_1.useState(xstream_1.default.empty());
-    const viewIn$ = xstream_1.default.create();
-    const send = react_1.useCallback((v) => {
-        viewIn$.shamefullySendNext(v);
-    }, []);
-    react_1.useEffect(() => {
-        setState(main_1.run(viewIn$));
-    }, []);
-    const ourState = use_stream_1.default(state$, main_1.startState);
-    const context = exports.makeContext(ourState, send);
-    return (react_1.default.createElement(exports.StateContext.Provider, { value: context },
-        react_1.default.createElement("p", null,
-            react_1.default.createElement("button", { disabled: context.state.hasClickedButton, onClick: () => context.send({
-                    kind: 'did_click_button',
-                    didClick: true,
-                }) }, context.state.hasClickedButton
-                ? 'Great! Check the state'
-                : 'Click this button')),
-        react_1.default.createElement("p", null,
-            react_1.default.createElement("button", { disabled: !!context.state.userAgent, onClick: () => context.send({
-                    kind: 'fetch_user_agent',
-                }) }, "Fetch browser user agent")),
-        react_1.default.createElement("h4", null, "Our current state:"),
-        react_1.default.createElement("pre", null, JSON.stringify(context.state, null, 4))));
-};
-react_dom_1.render(react_1.default.createElement(App, null), document.getElementById('app'));
-
-},{"./main":3,"./use-stream":5,"react":19,"react-dom":16,"xstream":30}],5:[function(require,module,exports){
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const react_1 = require("react");
-/**
- * Hook for using xstream streams in React components.
- *
- * Usage:
- * ```ts
- * const theString = useStream<string>(someStringStream$, 'start');
- * console.log(theString); // logs values for someStringStream$
- ```
-*/
-const useStream = (stream$, initialState) => {
-    const [current, setCurrent] = react_1.useState(initialState);
-    react_1.useEffect(() => {
-        const sub = stream$.subscribe({
-            next: setCurrent,
-        });
-        return () => sub.unsubscribe();
-    });
-    return current;
-};
-exports.default = useStream;
-
-},{"react":19}],6:[function(require,module,exports){
+},{"../../src":7,"../../src/dedupe":6,"./BrowserDriver":2,"./util":4,"xstream":29,"xstream/extra/sampleCombine":28}],4:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const react_1 = require("react");
@@ -377,7 +300,55 @@ exports.useStream = (stream$, initialState) => {
     return current;
 };
 
-},{"react":19}],7:[function(require,module,exports){
+},{"react":18}],5:[function(require,module,exports){
+"use strict";
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const react_1 = __importStar(require("react"));
+const react_dom_1 = require("react-dom");
+const main_1 = require("./main");
+const xstream_1 = __importDefault(require("xstream"));
+const util_1 = require("./util");
+const App = () => {
+    const [state$, setState] = react_1.useState(xstream_1.default.empty());
+    const viewIn$ = xstream_1.default.create();
+    // Create our actual 'send' function which drives the viewIn$
+    // stream, which goes into `main`.
+    const send = react_1.useCallback((v) => {
+        viewIn$.shamefullySendNext(v);
+    }, []);
+    react_1.useEffect(() => {
+        // After mounting, kick the whole app off 🎉
+        const state$ = main_1.run(viewIn$, { debug: true });
+        setState(state$);
+    }, []);
+    // 'ourState' now includes our whole app state as a plain object
+    const state = util_1.useStream(state$, main_1.startState);
+    return (react_1.default.createElement("div", null,
+        react_1.default.createElement("p", null,
+            react_1.default.createElement("button", { onClick: () => send({
+                    kind: 'did_click_button',
+                    didClick: true,
+                }) }, "Click this button")),
+        react_1.default.createElement("p", null,
+            react_1.default.createElement("button", { disabled: !!state.userAgent, onClick: () => send({
+                    kind: 'fetch_user_agent',
+                }) }, "Fetch browser user agent")),
+        react_1.default.createElement("h4", null, "Our current state:"),
+        react_1.default.createElement("pre", null, JSON.stringify(state, null, 4))));
+};
+react_dom_1.render(react_1.default.createElement(App, null), document.getElementById('app'));
+
+},{"./main":3,"./util":4,"react":18,"react-dom":15,"xstream":29}],6:[function(require,module,exports){
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
@@ -414,7 +385,7 @@ exports.dedupe = (fn = I) => {
     };
 };
 
-},{"./lib/shallow-eq":9}],8:[function(require,module,exports){
+},{"./lib/shallow-eq":8}],7:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var run_1 = require("./run");
@@ -425,7 +396,7 @@ if (typeof window !== 'undefined') {
     window.Frap = { run: run_2.run, setup: run_2.setup };
 }
 
-},{"./run":10}],9:[function(require,module,exports){
+},{"./run":9}],8:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 function shallowEq(a, b) {
@@ -485,7 +456,7 @@ function isFlat(type) {
         type !== 'object');
 }
 
-},{}],10:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 "use strict";
 var __rest = (this && this.__rest) || function (s, e) {
     var t = {};
@@ -503,9 +474,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const xstream_1 = __importDefault(require("xstream"));
 const delay_1 = __importDefault(require("xstream/extra/delay"));
 /**
- * Factory for creating the function which starts your app.
- * Takes your `main` function an an optional set of drivers. */
-exports.setup = (main, startState, drivers) => (view) => exports.run(main, view, drivers || {}, startState);
+ * Factory for creating the `run` function which starts your app.
+ */
+exports.setup = (
+/**
+ * Your app's `main` function, which accepts `MainSources`, consisting
+ * of a view message stream, a stream of app state, and input from drivers.
+ *
+ * @see `MainSources`
+ */
+main, 
+/** Your app's start state. */
+startState = {}, 
+/** Drivers that your app will use. */
+drivers = {}) => (view, { debug } = { debug: false }) => exports.run({ main, view, drivers, startState, debug });
 /** Creates "sink proxies" which are dummy streams as outputs to a set of drivers. */
 const createSinkProxies = (drivers) => {
     const sinkProxies = {};
@@ -517,16 +499,12 @@ const createSinkProxies = (drivers) => {
     }
     return sinkProxies;
 };
-const createMainSinks = (view, state, sinkProxies, drivers) => {
+const callDrivers = (sinkProxies, drivers) => {
     // We create the sources to eventually feed to the main function.
     // We attach the "view" stream directly. We call each driver, which is
     // a function, with a "sink proxy". A proxy is a faked stream which is
     // imitating the real driver output, coming from the main function.
     // Thus, we achieve a cycle.
-    const builtInSources = {
-        view,
-        state,
-    };
     const sources = {};
     for (const name in drivers) {
         if (drivers.hasOwnProperty(name)) {
@@ -535,7 +513,7 @@ const createMainSinks = (view, state, sinkProxies, drivers) => {
             sources[name] = driver(sinkProxies[name]);
         }
     }
-    return Object.assign({}, sources, builtInSources);
+    return sources;
 };
 /**
  * Starts the whole application. Takes a `main` function (your app),
@@ -544,7 +522,9 @@ const createMainSinks = (view, state, sinkProxies, drivers) => {
  * We return the stream of the core app state for the app to draw in
  * the view.
  */
-exports.run = (main, view, drivers, startState) => {
+exports.run = (sources) => {
+    const { main, drivers, view, startState, debug } = sources;
+    const log = (label) => (t) => !!debug && console.log(label + ':', t);
     const proxies = createSinkProxies(drivers);
     // Incremental updates to the main app state. Cycled back via imitate so
     // we also can use the state to derive updates.
@@ -552,11 +532,12 @@ exports.run = (main, view, drivers, startState) => {
     // Folded app state from the incremental updates
     const state$ = stateUpdate$
         .fold((prev, update) => (Object.assign({}, prev, update)), startState)
-        .debug('state');
-    const _a = main(createMainSinks(view, state$, proxies, drivers)), { updates$ } = _a, driverSinks = __rest(_a, ["updates$"]);
+        .debug(log('state'));
+    const mainSinks = Object.assign({ view, state: state$ }, callDrivers(proxies, drivers));
+    const _a = main(mainSinks), { updates$ } = _a, driverSinks = __rest(_a, ["updates$"]);
     // Finally, merge incremental state updates
     const realStateUpdate$ = updates$
-        .debug('update')
+        .debug(log('update'))
         .compose(delay_1.default(1));
     // tslint:disable-next-line
     stateUpdate$.imitate(realStateUpdate$);
@@ -576,7 +557,7 @@ exports.run = (main, view, drivers, startState) => {
     return state$;
 };
 
-},{"xstream":30,"xstream/extra/delay":28}],11:[function(require,module,exports){
+},{"xstream":29,"xstream/extra/delay":27}],10:[function(require,module,exports){
 /*
 object-assign
 (c) Sindre Sorhus
@@ -668,7 +649,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 	return to;
 };
 
-},{}],12:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -774,7 +755,7 @@ checkPropTypes.resetWarningCache = function() {
 module.exports = checkPropTypes;
 
 }).call(this,require('_process'))
-},{"./lib/ReactPropTypesSecret":13,"_process":1}],13:[function(require,module,exports){
+},{"./lib/ReactPropTypesSecret":12,"_process":1}],12:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -788,7 +769,7 @@ var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
 module.exports = ReactPropTypesSecret;
 
-},{}],14:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 (function (process){
 /** @license React v16.8.6
  * react-dom.development.js
@@ -22070,7 +22051,7 @@ module.exports = reactDom;
 }
 
 }).call(this,require('_process'))
-},{"_process":1,"object-assign":11,"prop-types/checkPropTypes":12,"react":19,"scheduler":24,"scheduler/tracing":25}],15:[function(require,module,exports){
+},{"_process":1,"object-assign":10,"prop-types/checkPropTypes":11,"react":18,"scheduler":23,"scheduler/tracing":24}],14:[function(require,module,exports){
 /** @license React v16.8.6
  * react-dom.production.min.js
  *
@@ -22341,7 +22322,7 @@ x("38"):void 0;return Si(a,b,c,!1,d)},unmountComponentAtNode:function(a){Qi(a)?v
 X;X=!0;try{ki(a)}finally{(X=b)||W||Yh(1073741823,!1)}},__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:{Events:[Ia,Ja,Ka,Ba.injectEventPluginsByName,pa,Qa,function(a){ya(a,Pa)},Eb,Fb,Dd,Da]}};function Ui(a,b){Qi(a)?void 0:x("299","unstable_createRoot");return new Pi(a,!0,null!=b&&!0===b.hydrate)}
 (function(a){var b=a.findFiberByHostInstance;return Te(n({},a,{overrideProps:null,currentDispatcherRef:Tb.ReactCurrentDispatcher,findHostInstanceByFiber:function(a){a=hd(a);return null===a?null:a.stateNode},findFiberByHostInstance:function(a){return b?b(a):null}}))})({findFiberByHostInstance:Ha,bundleType:0,version:"16.8.6",rendererPackageName:"react-dom"});var Wi={default:Vi},Xi=Wi&&Vi||Wi;module.exports=Xi.default||Xi;
 
-},{"object-assign":11,"react":19,"scheduler":24}],16:[function(require,module,exports){
+},{"object-assign":10,"react":18,"scheduler":23}],15:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -22383,7 +22364,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react-dom.development.js":14,"./cjs/react-dom.production.min.js":15,"_process":1}],17:[function(require,module,exports){
+},{"./cjs/react-dom.development.js":13,"./cjs/react-dom.production.min.js":14,"_process":1}],16:[function(require,module,exports){
 (function (process){
 /** @license React v16.8.6
  * react.development.js
@@ -24288,7 +24269,7 @@ module.exports = react;
 }
 
 }).call(this,require('_process'))
-},{"_process":1,"object-assign":11,"prop-types/checkPropTypes":12}],18:[function(require,module,exports){
+},{"_process":1,"object-assign":10,"prop-types/checkPropTypes":11}],17:[function(require,module,exports){
 /** @license React v16.8.6
  * react.production.min.js
  *
@@ -24315,7 +24296,7 @@ b,d){return W().useImperativeHandle(a,b,d)},useDebugValue:function(){},useLayout
 b){void 0!==b.ref&&(h=b.ref,f=J.current);void 0!==b.key&&(g=""+b.key);var l=void 0;a.type&&a.type.defaultProps&&(l=a.type.defaultProps);for(c in b)K.call(b,c)&&!L.hasOwnProperty(c)&&(e[c]=void 0===b[c]&&void 0!==l?l[c]:b[c])}c=arguments.length-2;if(1===c)e.children=d;else if(1<c){l=Array(c);for(var m=0;m<c;m++)l[m]=arguments[m+2];e.children=l}return{$$typeof:p,type:a.type,key:g,ref:h,props:e,_owner:f}},createFactory:function(a){var b=M.bind(null,a);b.type=a;return b},isValidElement:N,version:"16.8.6",
 unstable_ConcurrentMode:x,unstable_Profiler:u,__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:{ReactCurrentDispatcher:I,ReactCurrentOwner:J,assign:k}},Y={default:X},Z=Y&&X||Y;module.exports=Z.default||Z;
 
-},{"object-assign":11}],19:[function(require,module,exports){
+},{"object-assign":10}],18:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -24326,7 +24307,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react.development.js":17,"./cjs/react.production.min.js":18,"_process":1}],20:[function(require,module,exports){
+},{"./cjs/react.development.js":16,"./cjs/react.production.min.js":17,"_process":1}],19:[function(require,module,exports){
 (function (process){
 /** @license React v0.13.6
  * scheduler-tracing.development.js
@@ -24753,7 +24734,7 @@ exports.unstable_unsubscribe = unstable_unsubscribe;
 }
 
 }).call(this,require('_process'))
-},{"_process":1}],21:[function(require,module,exports){
+},{"_process":1}],20:[function(require,module,exports){
 /** @license React v0.13.6
  * scheduler-tracing.production.min.js
  *
@@ -24765,7 +24746,7 @@ exports.unstable_unsubscribe = unstable_unsubscribe;
 
 'use strict';Object.defineProperty(exports,"__esModule",{value:!0});var b=0;exports.__interactionsRef=null;exports.__subscriberRef=null;exports.unstable_clear=function(a){return a()};exports.unstable_getCurrent=function(){return null};exports.unstable_getThreadID=function(){return++b};exports.unstable_trace=function(a,d,c){return c()};exports.unstable_wrap=function(a){return a};exports.unstable_subscribe=function(){};exports.unstable_unsubscribe=function(){};
 
-},{}],22:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 (function (process,global){
 /** @license React v0.13.6
  * scheduler.development.js
@@ -25468,7 +25449,7 @@ exports.unstable_getFirstCallbackNode = unstable_getFirstCallbackNode;
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":1}],23:[function(require,module,exports){
+},{"_process":1}],22:[function(require,module,exports){
 (function (global){
 /** @license React v0.13.6
  * scheduler.production.min.js
@@ -25493,7 +25474,7 @@ b=c.previous;b.next=c.previous=a;a.next=c;a.previous=b}return a};exports.unstabl
 exports.unstable_shouldYield=function(){return!e&&(null!==d&&d.expirationTime<l||w())};exports.unstable_continueExecution=function(){null!==d&&p()};exports.unstable_pauseExecution=function(){};exports.unstable_getFirstCallbackNode=function(){return d};
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],24:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -25504,7 +25485,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/scheduler.development.js":22,"./cjs/scheduler.production.min.js":23,"_process":1}],25:[function(require,module,exports){
+},{"./cjs/scheduler.development.js":21,"./cjs/scheduler.production.min.js":22,"_process":1}],24:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -25515,7 +25496,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/scheduler-tracing.development.js":20,"./cjs/scheduler-tracing.production.min.js":21,"_process":1}],26:[function(require,module,exports){
+},{"./cjs/scheduler-tracing.development.js":19,"./cjs/scheduler-tracing.production.min.js":20,"_process":1}],25:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -25547,7 +25528,7 @@ if (typeof self !== 'undefined') {
 var result = (0, _ponyfill2['default'])(root);
 exports['default'] = result;
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./ponyfill.js":27}],27:[function(require,module,exports){
+},{"./ponyfill.js":26}],26:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -25571,7 +25552,7 @@ function symbolObservablePonyfill(root) {
 
 	return result;
 };
-},{}],28:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var index_1 = require("../index");
@@ -25665,7 +25646,7 @@ function delay(period) {
 }
 exports.default = delay;
 
-},{"../index":30}],29:[function(require,module,exports){
+},{"../index":29}],28:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var index_1 = require("../index");
@@ -25841,7 +25822,7 @@ sampleCombine = function sampleCombine() {
 };
 exports.default = sampleCombine;
 
-},{"../index":30}],30:[function(require,module,exports){
+},{"../index":29}],29:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
@@ -27590,4 +27571,4 @@ exports.MemoryStream = MemoryStream;
 var xs = Stream;
 exports.default = xs;
 
-},{"symbol-observable":26}]},{},[4]);
+},{"symbol-observable":25}]},{},[5]);
