@@ -60,7 +60,7 @@ const createMainSinks = <V, D extends Drivers>(
  * We return the stream of the core app state for the app to draw in
  * the view.
  */
-const run = <V, S, D extends Drivers, M extends Main<V, S, D>>(
+export const run = <V, S, D extends Drivers, M extends Main<V, S, D>>(
     main: M,
     view: Stream<V>,
     drivers: D,
