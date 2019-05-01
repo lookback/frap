@@ -1,4 +1,7 @@
-# Frap – "Functional Reactive Apps"
+<p align="center">
+  <img src="./frap-logo.svg" width="150" height="150" alt="Frap">
+</p>
+<h1 align="center">Frap – "Functional Reactive App"</h1>
 
 A Functional Reactive Programming architecture with [xstream](http://staltz.github.io/xstream/), built for React apps used by Lookback's frontend. Heavily inspired by [CycleJS](https://cycle.js.org).
 
