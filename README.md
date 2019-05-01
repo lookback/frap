@@ -38,12 +38,17 @@ We use:
 2. Add as a `<script>` tag in your HTML:
 
    ```html
-  <body>
-    <!-- stuff -->
-    <script src="frap.min.js"></script>
-  </body>
+   <body>
+     <!-- your app -->
+     <script src="frap.min.js"></script>
+   </body>
    ```
 3. The `Frap` namespace is now available in the global scope.
+
+## Get started
+
+TBD.
+
 
 ## Develop
 
