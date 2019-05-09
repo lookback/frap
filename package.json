@@ -2,14 +2,20 @@
   "name": "frap",
   "version": "0.0.0",
   "description": "A tiny Functional Reactive architecture for JS apps.",
-  "main": "build/index.js",
+  "main": "build/cjs/index.js",
+  "module": "build/es6/index.js",
+  "types": "build/cjs/index.d.ts",
   "scripts": {
     "lint": "tslint --format stylish --project .",
     "pretest": "npm run lint",
-    "build": "tsc",
+    "build": "npm run build-cjs && npm run build-es6",
+    "build-cjs": "tsc --module commonjs --outDir build/cjs",
+    "build-es6": "tsc --module es6 --outDir build/es6",
+    "examples": "tsc --project tsconfig.examples.json --outDir build",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "bundle": "tsc && browserify build/src/index.js -s setup | terser -c -m > dist/frap.min.js",
-    "test-bundle": "tsc && browserify build/examples/basic-react-typescript/view.js -d > test/bundle.js"
+    "bundle": "npm run build-cjs && mkdir -p dist && browserify build/cjs/index.js -s setup | terser -c -m > dist/frap.min.js",
+    "test-bundle": "npm run examples && browserify build/examples/basic-react-typescript/view.js -d > test/bundle.js",
+    "prepublishOnly": "npm run build"
   },
   "author": "Martin Algesten <martin@lookback.io>",
   "contributors": [
@@ -22,7 +28,7 @@
   "bugs": {
     "url": "https://github.com/lookback/frap/issues"
   },
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@types/react": "^16.8.14",
     "@types/react-dom": "^16.8.4",
@@ -35,6 +41,6 @@
     "typescript": "^3.4.5"
   },
   "dependencies": {
-    "xstream": "^11.10.0"
+    "xstream": "10.x || 11.x"
   }
 }
