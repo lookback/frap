@@ -20,7 +20,7 @@ export const setup = <V, S, D extends Drivers>(
 ) => (
     view: Stream<V>,
     { debug }: { debug: boolean } = { debug: false }
-): Stream<S> => run({ main, view, drivers, startState, debug });
+): Stream<S> => run(main, { view, drivers }, startState, debug);
 
 /** Creates "sink proxies" which are dummy streams as outputs to a set of drivers. */
 const createSinkProxies = <D extends Drivers>(drivers?: D): SinkProxies<D> => {
@@ -65,14 +65,16 @@ const callDrivers = <D extends Drivers>(
  * We return the stream of the core app state for the app to draw in
  * the view.
  */
-export const run = <V, S, D extends Drivers, M extends Main<V, S, D>>(sources: {
-    main: M;
-    view: Stream<V>;
-    drivers: D;
-    startState: S;
-    debug?: boolean;
-}): Stream<S> => {
-    const { main, drivers, view, startState, debug } = sources;
+export const run = <V, S, D extends Drivers, M extends Main<V, S, D>>(
+    main: M,
+    sources: {
+        view: Stream<V>;
+        drivers: D;
+    },
+    startState: S,
+    debug?: boolean
+): Stream<S> => {
+    const { drivers, view } = sources;
 
     const log = (label: string) => (t: any) =>
         !!debug && console.log(label + ':', t);
