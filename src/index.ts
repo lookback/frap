@@ -6,5 +6,5 @@ export { Drivers, MainSources, MainSinks } from './types';
 import { run, setup } from './run';
 
 if (typeof window !== 'undefined') {
-    (window as any).Frap = { run, setup};
+    (window as any).Frap = { run, setup };
 }

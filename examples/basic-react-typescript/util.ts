@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Stream } from 'xstream';
 
-export const isKind = <T>(kind: string) =>
-    (t: any): t is T => t.kind === kind;
+export const isKind = <T>(kind: string) => (t: any): t is T => t.kind === kind;
 
 /**
  * Hook for using xstream streams in React components.

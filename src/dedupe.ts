@@ -6,7 +6,7 @@ const I = <T>(v: T) => v;
  * Deduplicate elements in a stream using shallow comparison.
  *
  * Usage:
- * 
+ *
  * ```ts
  * xs
  *  .of([1, 2, 1, 1])

@@ -41,16 +41,18 @@ const makeModel = (sources: MainSources<MyState, ViewIn, MyDrivers>) => {
         }));
 
     // Receive input from the browser driver and map to a state update.
-    const browserDriverUpdates$ = sources.browser.map<Partial<MyState>>(userAgent => ({
-        userAgent,
-    }));
+    const browserDriverUpdates$ = sources.browser.map<Partial<MyState>>(
+        (userAgent) => ({
+            userAgent,
+        })
+    );
 
     // Use the incoming state stream to derive a new state (`isUsingMac`):
     const derived$: Stream<Partial<MyState>> = sources.state
-        .map(s => s.userAgent)
+        .map((s) => s.userAgent)
         .filter(dedupe())
         .filter((s): s is string => !!s)
-        .map(userAgent => ({
+        .map((userAgent) => ({
             usingMac: isUsingMac(userAgent),
         }));
 
@@ -60,7 +62,7 @@ const makeModel = (sources: MainSources<MyState, ViewIn, MyDrivers>) => {
     // A periodic update of a property in our state.
     const greetingStateUpdate$ = xs
         .periodic(1000)
-        .map<Partial<MyState>>(n => ({
+        .map<Partial<MyState>>((n) => ({
             greeting: `Hello ${n}!`,
         }))
         .endWhen(xs.periodic(3000).take(1));
@@ -76,8 +78,9 @@ const main = (
 
     // Filter on these messages from our view and provide them directly as
     // output to our browser driver.
-    const browserOut$ = sources.view
-        .filter(isKind<FetchUserAgent>('fetch_user_agent'));
+    const browserOut$ = sources.view.filter(
+        isKind<FetchUserAgent>('fetch_user_agent')
+    );
 
     return {
         // the app state stream

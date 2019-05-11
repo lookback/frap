@@ -8,9 +8,8 @@ export type BuiltInSources<S, V> = {
 };
 
 /** The sources fed to the `main` app function. */
-export type MainSources<S, V, D extends Drivers> = BuiltInSources<S, V> & {
-    [k in keyof D]: ReturnType<D[k]>;
-};
+export type MainSources<S, V, D extends Drivers> = BuiltInSources<S, V> &
+    { [k in keyof D]: ReturnType<D[k]> };
 
 export type BuiltInSinks<S> = {
     /** A stream of incremental state updates. */
@@ -19,7 +18,7 @@ export type BuiltInSinks<S> = {
 
 /** Output streams to drivers. */
 export type DriverOut<D extends Drivers> = {
-    [k in keyof D]: Parameters<D[k]>[0];
+    [k in keyof D]: Parameters<D[k]>[0]
 };
 
 /** The outputs of the `main` function. */

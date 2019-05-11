@@ -36,7 +36,7 @@ const App = () => {
         setState(state$);
     }, []);
     
-    // 'ourState' now includes our whole app state as a plain object
+    // 'state' now includes our whole app state as a plain object
     const state = useStream(state$, startState);
 
     return (

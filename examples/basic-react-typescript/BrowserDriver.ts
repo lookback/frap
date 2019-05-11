@@ -9,7 +9,7 @@ type BrowserIn = string;
 
 /**
  * A driver which interacts with browser APIs and sends back sources.
- * 
+ *
  * This driver can potentially interact with all kinds of browser APIs,
  * depending on the requirements. But the important part is that all of
  * the calls to external APIs (side effects) are collected *here* and

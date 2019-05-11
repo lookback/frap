@@ -17,9 +17,7 @@ export default function shallowEq(a: any, b: any): boolean {
     if (aTypeof !== bTypeof) return false;
     if (isFlat(aTypeof)) return a === b;
 
-    return aIsArray
-        ? shallowArray(a, b)
-        : shallowObject(a, b);
+    return aIsArray ? shallowArray(a, b) : shallowObject(a, b);
 }
 
 function shallowArray(a: any[], b: any[]): boolean {
@@ -40,10 +38,7 @@ function shallowObject(a: any, b: any): boolean {
     let kb = 0;
 
     for (const key in a) {
-        if (
-            a.hasOwnProperty(key) &&
-            a[key] !== b[key]
-        ) return false;
+        if (a.hasOwnProperty(key) && a[key] !== b[key]) return false;
 
         // tslint:disable-next-line:no-expression-statement
         ka++;
@@ -58,8 +53,5 @@ function shallowObject(a: any, b: any): boolean {
 }
 
 function isFlat(type: any): boolean {
-    return (
-        type !== 'function' &&
-        type !== 'object'
-    );
+    return type !== 'function' && type !== 'object';
 }
