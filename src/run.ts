@@ -20,7 +20,7 @@ export const setup = <V, S, D extends Drivers>(
 ) => (
     view: Stream<V>,
     { debug }: { debug: boolean } = { debug: false }
-): Stream<S> => run(main, { view, drivers }, startState, debug);
+): Stream<S> => run(main, startState, { view, drivers }, debug);
 
 /** Creates "sink proxies" which are dummy streams as outputs to a set of drivers. */
 const createSinkProxies = <D extends Drivers>(drivers?: D): SinkProxies<D> => {
@@ -67,11 +67,11 @@ const callDrivers = <D extends Drivers>(
  */
 export const run = <V, S, D extends Drivers, M extends Main<V, S, D>>(
     main: M,
+    startState: S,
     sources: {
         view: Stream<V>;
         drivers: D;
     },
-    startState: S,
     debug?: boolean
 ): Stream<S> => {
     const { drivers, view } = sources;
