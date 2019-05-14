@@ -49,14 +49,24 @@ We use:
 
 TBD.
 
-
 ## Develop
 
 ```bash
 npm install
 npx tsc -w # Watch and compile TS
-npm run bundle-test # Build example bundle
-open test/index.html # Open test page
+```
+
+### Tests
+
+```bash
+npm test
+```
+
+Manual testing in browser:
+
+```bash
+npm run test-bundle
+open examples/index.html
 ```
 
 ## To Do
