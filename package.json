@@ -12,7 +12,7 @@
     "bundle": "npm run build && rollup -c",
     "clean": "rm -rf build",
     "test": "npm run test-types && loltest",
-    "test-types": "tsc test/types.ts --noEmit",
+    "test-types": "tsc test/_types.ts --noEmit",
     "lint": "tslint --format stylish --project .",
     "pretest": "npm run lint",
     "examples": "tsc --project examples --outDir examples/build --rootDir examples",
