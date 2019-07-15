@@ -1,6 +1,6 @@
 import { Stream } from 'xstream';
 import { isKind } from './util';
-import { FetchUserAgent } from './view';
+import { FetchUserAgent } from './app';
 
 /** The different kinds of output to our browser driver. */
 type BrowserOut = FetchUserAgent;

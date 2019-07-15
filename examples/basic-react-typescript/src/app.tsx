@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { render } from 'react-dom';
 import { run, MyState, startState } from './main';
 import xs, { Stream } from 'xstream';
 import { useStream } from './util';
@@ -19,7 +18,7 @@ export type ViewIn = DidClickButton | FetchUserAgent;
 /** Our 'send' function signature. */
 type Send = (event: ViewIn) => void;
 
-const App = () => {
+export const App = () => {
     const [state$, setState] = useState<Stream<MyState>>(xs.empty());
 
     const viewIn$ = xs.create<ViewIn>();
@@ -35,7 +34,7 @@ const App = () => {
         const state$ = run(viewIn$, { debug: true });
         setState(state$);
     }, []);
-    
+
     // 'state' now includes our whole app state as a plain object
     const state = useStream(state$, startState);
 
@@ -43,20 +42,24 @@ const App = () => {
         <div>
             <p>
                 <button
-                    onClick={() => send({
-                        kind: 'did_click_button',
-                        didClick: true,
-                    } as DidClickButton)}>
-                        Click this button
-                    </button>
+                    onClick={() =>
+                        send({
+                            kind: 'did_click_button',
+                            didClick: true,
+                        } as DidClickButton)
+                    }>
+                    Click this button
+                </button>
             </p>
 
             <p>
-                <button 
+                <button
                     disabled={!!state.userAgent}
-                    onClick={() => send({
-                        kind: 'fetch_user_agent',
-                    } as FetchUserAgent)}>
+                    onClick={() =>
+                        send({
+                            kind: 'fetch_user_agent',
+                        } as FetchUserAgent)
+                    }>
                     Fetch browser user agent
                 </button>
             </p>
@@ -66,5 +69,3 @@ const App = () => {
         </div>
     );
 };
-
-render(<App />, document.getElementById('app'));

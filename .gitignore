@@ -1,4 +1,5 @@
 node_modules
-build
 .DS_Store
-examples/bundle.js
+examples/**/dist
+examples/**/build
+*.js.map

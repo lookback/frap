@@ -2,20 +2,22 @@
   "name": "frap",
   "version": "0.0.0",
   "description": "A tiny Functional Reactive architecture for JS apps.",
-  "main": "build/cjs/index.js",
-  "module": "build/es6/index.js",
-  "types": "build/cjs/index.d.ts",
+  "main": "lib/cjs/index.js",
+  "module": "lib/index.js",
+  "unpkg": "dist/frap.min.js",
   "scripts": {
+    "build": "npm run clean && npm run build-legacy & npm run build-es",
+    "build-legacy": "tsc --module commonjs --outDir lib/cjs",
+    "build-es": "tsc --module es2015",
+    "bundle": "npm run build && rollup -c",
+    "clean": "rm -rf build",
+    "test": "npm run test-types && loltest",
+    "test-types": "tsc test/types.ts --noEmit",
     "lint": "tslint --format stylish --project .",
     "pretest": "npm run lint",
-    "build": "npm run build-cjs && npm run build-es6",
-    "build-cjs": "tsc --module commonjs --outDir build/cjs",
-    "build-es6": "tsc --module es6 --outDir build/es6",
-    "examples": "tsc --project examples --outDir build",
-    "test": "loltest",
-    "bundle": "npm run build-cjs && mkdir -p dist && browserify build/cjs/index.js -s setup | terser -c -m > dist/frap.min.js",
-    "test-bundle": "npm run examples && browserify build/examples/basic-react-typescript/view.js -d > examples/bundle.js",
-    "prepublishOnly": "npm run build"
+    "examples": "tsc --project examples --outDir examples/build --rootDir examples",
+    "prepublishOnly": "npm run bundle",
+    "release": "npm install && npm test && npm run bundle && git add package.json package-lock.json dist && git commit -m $npm_package_version && git tag $npm_package_version && git push && git push --tags"
   },
   "author": "Martin Algesten <martin@lookback.io>",
   "contributors": [
@@ -31,16 +33,16 @@
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^12.0.0",
-    "@types/react": "^16.8.14",
-    "@types/react-dom": "^16.8.4",
-    "browserify": "^16",
     "loltest": "github:lookback/loltest#1.1.2",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6",
-    "terser": "^3",
+    "rollup": "^1.16.7",
+    "rollup-plugin-bundle-size": "^1.0.3",
+    "rollup-plugin-commonjs": "^10.0.1",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-terser": "^5.1.1",
+    "rollup-plugin-replace": "^2.2.0",
     "tslint": "^5",
     "tslint-immutable": "^5",
-    "typescript": "^3.4.5"
+    "typescript": "^3.5"
   },
   "dependencies": {
     "xstream": "10.x || 11.x"

@@ -1,2 +1,15 @@
+.ignore/
+node_modules/
+.idea/
+.sass-cache
+
+examples
+src
 test
-dist
+tools
+typings
+
+.editorconfig
+tsconfig.json
+tslint.json
+typings.json

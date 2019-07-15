@@ -1,9 +1,9 @@
 import xs, { Stream } from 'xstream';
 import sampleCombine from 'xstream/extra/sampleCombine';
-import { Drivers, MainSources, MainSinks, setup } from '../../src';
-import { dedupe } from '../../src/dedupe';
+import { Drivers, MainSources, MainSinks, setup } from 'frap';
+import { dedupe } from 'frap/lib/dedupe';
 
-import { ViewIn, DidClickButton, FetchUserAgent } from './view';
+import { ViewIn, DidClickButton, FetchUserAgent } from './app';
 import { isKind } from './util';
 import { BrowserDriver } from './BrowserDriver';
 

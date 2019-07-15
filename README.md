@@ -8,7 +8,8 @@ A Functional Reactive Programming architecture with [xstream](http://staltz.gith
 | Variant | Size |
 |---------|------|
 | frap.js | 60 KB |
-| frap.min.js *(minified)* | 20 KB |
+| frap.min.js *(minified)* | 18 KB |
+| frap.min.js *(minified & gzipped)* | 4 KB |
 
 ## Examples
 
@@ -43,7 +44,6 @@ We use:
      <script src="frap.min.js"></script>
    </body>
    ```
-3. The `Frap` namespace is now available in the global scope.
 
 ## Get started
 
@@ -62,16 +62,10 @@ npx tsc -w # Watch and compile TS
 npm test
 ```
 
-Manual testing in browser:
-
-```bash
-npm run test-bundle
-open examples/index.html
-```
-
 ## To Do
 
 - [x] Working example
 - [x] Proper types
+- [x] Proper bundle process
 - [ ] More examples?
 - [ ] More documentation
